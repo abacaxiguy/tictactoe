@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel, QGraphicsOpacityEffect
-from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve
+from PyQt5.QtGui import QPixmap, QIcon, QMovie
+from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve, QTimer
 
 class GUI(QWidget):
     def __init__(self):
@@ -18,25 +18,45 @@ class GUI(QWidget):
         self.playscreen.setPixmap(playbackground)
         self.playscreen.setAlignment(Qt.AlignCenter)
 
+        self.playbutton = QPushButton("", self)
+        self.playbutton.setStyleSheet("background-color: rgba(0, 0, 0, 0);")
+        self.playbutton.setGeometry(287, 401, 166, 76)
+        self.playbutton.clicked.connect(self.waitPlayer)
+
         background = QPixmap("assets/tictactoe.png")
-        background = background.scaled(740, 740, Qt.KeepAspectRatioByExpanding)
 
         self.background = QLabel(self)
         self.background.setPixmap(background)
         self.background.setAlignment(Qt.AlignCenter)
+        self.background.setGeometry(0, 0, 740, 740)
 
         self.background.hide()
 
-        self.playbutton = QPushButton("", self)
-        self.playbutton.setStyleSheet("background-color: rgba(0, 0, 0, 0);")
-        self.playbutton.setGeometry(287, 401, 166, 76)
-        self.playbutton.clicked.connect(self.startGame)
+        self.waiting = QMovie("assets/waiting.gif")
+
+        self.waitingbg = QLabel(self)
+        self.waitingbg.setMovie(self.waiting)
+        self.waitingbg.setGeometry(0, 0, 740, 740)
+        self.waitingbg.setAlignment(Qt.AlignCenter)
+        self.waitingbg.hide()
+
+    def waitPlayer(self):
+        self.fadeOut(self.playbutton)
+        self.fadeOut(self.playscreen)
+
+        self.fadeIn(self.waitingbg)
+        self.waitingbg.show()
+        self.waiting.start()
+        
+        QTimer.singleShot(5000, self.startGame)
 
     def startGame(self):
-        self.fadeOut(self.playscreen)
-        self.fadeOut(self.playbutton)
+        self.playscreen.hide()
+        # self.fadeOutMovie(self.waitingbg)
+        self.waitingbg.hide()
+        self.waiting.stop()
 
-        self.fadeIn(self.background)
+        # self.fadeIn(self.background)
         self.background.show()
 
         self.turnX = True # True = X, False = O
@@ -56,7 +76,6 @@ class GUI(QWidget):
                 self.button.setGeometry((89 + i * 189), (89 + j * 189), 186, 186)
                 self.button.clicked.connect(lambda _, i=i, j=j: self.setPlay(i, j))
                 self.button.show()
-
 
     def setPlay(self, i, j):
         self.showX(i, j) if self.turnX else self.showO(i, j)
@@ -171,7 +190,6 @@ class GUI(QWidget):
         self.o22.setGeometry(480, 480, 162, 162)
         self.o22.hide()
 
-
     def showX(self, i, j):
         if j == 0 and i == 0: self.fadeIn(self.x00); self.x00.show()
         elif j == 0 and i == 1: self.fadeIn(self.x01); self.x01.show()
@@ -218,6 +236,18 @@ class GUI(QWidget):
 
         self.animation.finished.connect(lambda: widget.hide())
 
+    def fadeOutMovie(self, widget):
+        self.effect = QGraphicsOpacityEffect()
+        widget.setGraphicsEffect(self.effect)
+
+        self.animation = QPropertyAnimation(widget, b"currentFrameNumber")
+        self.animation.easingCurve = QEasingCurve.OutCubic
+        self.animation.setDuration(2000)
+        self.animation.setStartValue(0)
+        self.animation.setEndValue(widget.frameCount() - 1)
+        self.animation.start()
+
+        self.animation.finished.connect(lambda: widget.hide())
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
