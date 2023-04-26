@@ -19,7 +19,7 @@ class GUI(QWidget):
         self.playscreen.setAlignment(Qt.AlignCenter)
 
         self.playbutton = QPushButton("", self)
-        self.playbutton.setStyleSheet("background-color: rgba(0, 0, 0, 0);")
+        self.playbutton.setStyleSheet("background-color: rgba(0, 0, 0, 0); border: none")
         self.playbutton.setGeometry(287, 401, 166, 76)
         self.playbutton.clicked.connect(self.waitPlayer)
 
@@ -72,7 +72,7 @@ class GUI(QWidget):
         for i in range(3):
             for j in range(3):
                 self.button = QPushButton("", self)
-                self.button.setStyleSheet("background-color: rgba(0, 0, 0, 0);")
+                self.button.setStyleSheet("background-color: rgba(0, 0, 0, 0); border: none")
                 self.button.setGeometry((89 + i * 189), (89 + j * 189), 186, 186)
                 self.button.clicked.connect(lambda _, i=i, j=j: self.setPlay(i, j))
                 self.button.show()
