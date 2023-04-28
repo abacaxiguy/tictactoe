@@ -39,7 +39,6 @@ class GUI(QWidget):
         self.waiting.start()
 
         # fake waiting
-        #era pra ser 5000
         QTimer.singleShot(0, self.startGame)
 
     def startGame(self):
@@ -76,44 +75,28 @@ class GUI(QWidget):
         self.xMoves = []
         self.oMoves = []
         self.winMoves =[
-                            ["00","11","22"], #diagonal 1
-                            ["20","11","02"], #diagonal 2
-                            ["00", "01", "02"], #linha 0
-                            ["10", "11", "12"], #linha 1 
-                            ["20", "21", "22"], #linha 2    
-                            ["00", "10", "20"], #coluna 0
-                            ["01", "11", 21], #coluna 1
-                            ["02", "12", "22"] #coluna 2
-                            ]
+            ["00","11","22"], # diagonal 1
+            ["20","11","02"], # diagonal 2
+            ["00", "01", "02"], # horizontal 0
+            ["10", "11", "12"], # horizontal 1 
+            ["20", "21", "22"], # horizontal 2    
+            ["00", "10", "20"], # vertical 0
+            ["01", "11", 21], # vertical 1
+            ["02", "12", "22"] # vertical 2
+        ]
 
     def setPlay(self, i, j):
-
-        self.winner = ""
-
-        #save moves-----------------------
-        if self.turnX:
-            self.xMoves.append(str(i)+str(j))
-
-        else:    
-            self.oMoves.append(str(i)+str(j))
-
-        #verify the winner-----------------------
-        if len(self.xMoves) >= 3:
-            for move in self.winMoves: 
-                if all(item in self.xMoves for item in move):
-                    self.winner = "x"
-
-        if len(self.oMoves) >= 3:
-            for move in self.winMoves: 
-                if all(item in self.oMoves for item in move):
-                    self.winner = "o"
-
-        print(self.winner)
-
         self.currentBtn = self.findChild(QPushButton, "E" + str(i) + str(j))
         if not self.currentBtn: return
 
         self.fadeIn(self.currentBtn)
+
+        # save moves-----------------------
+        if self.turnX:
+            self.xMoves.append(str(i)+str(j))
+
+        else:
+            self.oMoves.append(str(i)+str(j))
 
         self.currentBtn.setIcon(QIcon(self.xmap if self.turnX else self.omap))
         self.currentBtn.setIconSize(self.xmap.rect().size() if self.turnX else self.omap.rect().size())
@@ -130,12 +113,16 @@ class GUI(QWidget):
         self.turnX = not self.turnX
 
     def checkGameStatus(self):
-        for button in self.findChildren(QPushButton):
-            if "E" in button.objectName():
-                return
+        for move in self.winMoves: 
+            if all(item in self.oMoves for item in move):
+                    self.endGame("o")
+                    return
+            elif all(item in self.xMoves for item in move):
+                    self.endGame("x")
+                    return
 
-        # fake draw
-        self.endGame(None)
+        if len(self.oMoves) + len(self.xMoves) == 9:
+            self.endGame("draw")
 
     def endGame(self, winner):
         self.disableAllButtons()
@@ -144,11 +131,11 @@ class GUI(QWidget):
         self.winner.setAlignment(Qt.AlignCenter)
         self.winner.setGeometry(0, 0, 740, 740)
 
-        if winner == True:
+        if winner == "x":
             self.winner.setPixmap(QPixmap("assets/xwins.png"))
-        elif winner == False:
+        elif winner == "o":
             self.winner.setPixmap(QPixmap("assets/owins.png"))
-        else:
+        elif winner == "draw":
             self.winner.setPixmap(QPixmap("assets/draw.png"))
 
         self.fadeIn(self.winner, 1500)
@@ -218,3 +205,5 @@ if __name__ == '__main__':
     gui = GUI()
     gui.show()
     sys.exit(app.exec_())
+
+
