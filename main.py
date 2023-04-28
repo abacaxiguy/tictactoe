@@ -67,7 +67,7 @@ class GUI(QWidget):
             for j in range(3):
                 self.button = QPushButton("", self)
                 self.button.setStyleSheet("background-color: rgba(0, 0, 0, 0); border: none; QPushButton::disabled { color: #6A00B3; }")
-                self.button.setGeometry((81 + i * 189), (82 + j * 190), 186, 186)
+                self.button.setGeometry((81 + i * 190), (82 + j * 190), 186, 186)
                 self.button.clicked.connect(lambda _, i=i, j=j: self.setPlay(i, j))
                 self.button.setObjectName("E" + str(i) + str(j))
                 self.button.show()
@@ -93,6 +93,11 @@ class GUI(QWidget):
         self.turnX = not self.turnX
 
     def checkGameStatus(self):
+        for button in self.findChildren(QPushButton):
+            if "E" in button.objectName():
+                return
+
+        # fake draw
         self.endGame(None)
 
     def endGame(self, winner):
