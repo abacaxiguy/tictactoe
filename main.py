@@ -39,7 +39,8 @@ class GUI(QWidget):
         self.waiting.start()
 
         # fake waiting
-        QTimer.singleShot(5000, self.startGame)
+        #era pra ser 5000
+        QTimer.singleShot(0, self.startGame)
 
     def startGame(self):
         self.playscreen.hide()
@@ -71,8 +72,44 @@ class GUI(QWidget):
                 self.button.clicked.connect(lambda _, i=i, j=j: self.setPlay(i, j))
                 self.button.setObjectName("E" + str(i) + str(j))
                 self.button.show()
+        
+        self.xMoves = []
+        self.oMoves = []
+        self.winMoves =[
+                            ["00","11","22"], #diagonal 1
+                            ["20","11","02"], #diagonal 2
+                            ["00", "01", "02"], #linha 0
+                            ["10", "11", "12"], #linha 1 
+                            ["20", "21", "22"], #linha 2    
+                            ["00", "10", "20"], #coluna 0
+                            ["01", "11", 21], #coluna 1
+                            ["02", "12", "22"] #coluna 2
+                            ]
 
     def setPlay(self, i, j):
+
+        self.winner = ""
+
+        #save moves-----------------------
+        if self.turnX:
+            self.xMoves.append(str(i)+str(j))
+
+        else:    
+            self.oMoves.append(str(i)+str(j))
+
+        #verify the winner-----------------------
+        if len(self.xMoves) >= 3:
+            for move in self.winMoves: 
+                if all(item in self.xMoves for item in move):
+                    self.winner = "x"
+
+        if len(self.oMoves) >= 3:
+            for move in self.winMoves: 
+                if all(item in self.oMoves for item in move):
+                    self.winner = "o"
+
+        print(self.winner)
+
         self.currentBtn = self.findChild(QPushButton, "E" + str(i) + str(j))
         if not self.currentBtn: return
 
