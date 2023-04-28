@@ -1,7 +1,7 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel, QGraphicsOpacityEffect
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel, QGraphicsOpacityEffect, QGraphicsBlurEffect
 from PyQt5.QtGui import QPixmap, QIcon, QMovie
-from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve, QTimer
+from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve, QTimer, QParallelAnimationGroup
 
 class GUI(QWidget):
     def __init__(self):
@@ -23,14 +23,9 @@ class GUI(QWidget):
         self.playbutton.setGeometry(287, 401, 166, 76)
         self.playbutton.clicked.connect(self.waitPlayer)
 
-        background = QPixmap("assets/tictactoe.png")
-
-        self.background = QLabel(self)
-        self.background.setPixmap(background)
-        self.background.setAlignment(Qt.AlignCenter)
-        self.background.setGeometry(0, 0, 740, 740)
-
-        self.background.hide()
+    def waitPlayer(self):
+        self.fadeOut(self.playscreen)
+        self.playbutton.setEnabled(False)
 
         self.waiting = QMovie("assets/waiting.gif")
 
@@ -38,25 +33,26 @@ class GUI(QWidget):
         self.waitingbg.setMovie(self.waiting)
         self.waitingbg.setGeometry(0, 0, 740, 740)
         self.waitingbg.setAlignment(Qt.AlignCenter)
-        self.waitingbg.hide()
-
-    def waitPlayer(self):
-        self.fadeOut(self.playbutton)
-        self.fadeOut(self.playscreen)
-        self.playbutton.setEnabled(False)
 
         self.fadeIn(self.waitingbg)
         self.waitingbg.show()
         self.waiting.start()
-        
+
+        # fake waiting
         QTimer.singleShot(5000, self.startGame)
 
     def startGame(self):
         self.playscreen.hide()
-        self.waitingbg.hide()
+        self.fadeOut(self.waitingbg)
         self.waiting.stop()
 
-        # self.fadeIn(self.background)
+        background = QPixmap("assets/tictactoe.png")
+
+        self.background = QLabel(self)
+        self.background.setPixmap(background)
+        self.background.setAlignment(Qt.AlignCenter)
+        self.background.setGeometry(0, 0, 740, 740)
+        self.fadeIn(self.background)
         self.background.show()
 
         self.turnX = True # True = X, False = O
@@ -70,38 +66,92 @@ class GUI(QWidget):
         for i in range(3):
             for j in range(3):
                 self.button = QPushButton("", self)
-                self.button.setStyleSheet("background-color: rgba(0, 0, 0, 0); border: none")
+                self.button.setStyleSheet("background-color: rgba(0, 0, 0, 0); border: none; QPushButton::disabled { color: #6A00B3; }")
                 self.button.setGeometry((81 + i * 189), (82 + j * 190), 186, 186)
                 self.button.clicked.connect(lambda _, i=i, j=j: self.setPlay(i, j))
+                self.button.setObjectName("E" + str(i) + str(j))
                 self.button.show()
 
     def setPlay(self, i, j):
+        self.currentBtn = self.findChild(QPushButton, "E" + str(i) + str(j))
+        if not self.currentBtn: return
+
+        self.fadeIn(self.currentBtn)
+
+        self.currentBtn.setIcon(QIcon(self.xmap if self.turnX else self.omap))
+        self.currentBtn.setIconSize(self.xmap.rect().size() if self.turnX else self.omap.rect().size())
+
+        self.disableButton(self.currentBtn)
+
         for button in self.findChildren(QPushButton):
-            button.hide()
-            QTimer.singleShot(1000, button.show)
+            if "E" in button.objectName():
+                button.hide()
+                QTimer.singleShot(1000, button.show)
 
-        self.element = QLabel(self)
-        self.element.setPixmap(self.xmap if self.turnX else self.omap)
-        self.element.setAlignment(Qt.AlignCenter)
-        self.element.setGeometry((104 + i * 189), (110 + j * 190), 142, 142) if self.turnX else self.element.setGeometry((94 + i * 188), (96 + j * 189), 162, 162)
-
-        self.fadeIn(self.element)
-        self.element.show()
+        QTimer.singleShot(1000, self.checkGameStatus)
 
         self.turnX = not self.turnX
 
-    def fadeIn(self, widget):
+    def checkGameStatus(self):
+        self.endGame(None)
+
+    def endGame(self, winner):
+        self.disableAllButtons()
+
+        self.winner = QLabel(self)
+        self.winner.setAlignment(Qt.AlignCenter)
+        self.winner.setGeometry(0, 0, 740, 740)
+
+        if winner == True:
+            self.winner.setPixmap(QPixmap("assets/xwins.png"))
+        elif winner == False:
+            self.winner.setPixmap(QPixmap("assets/owins.png"))
+        else:
+            self.winner.setPixmap(QPixmap("assets/draw.png"))
+
+        self.fadeIn(self.winner, 1500)
+        self.winner.show()
+
+        self.blurAllBackground()
+
+    def blurAllBackground(self):
+        group = QParallelAnimationGroup(self)
+
+        self.effect = QGraphicsBlurEffect()
+        self.background.setGraphicsEffect(self.effect)
+
+        bganimation = QPropertyAnimation(self.effect, b"blurRadius")
+        bganimation.setDuration(1500)
+        bganimation.setStartValue(0)
+        bganimation.setEndValue(5)
+        group.addAnimation(bganimation)
+
+        
+        for button in self.findChildren(QPushButton):
+            if "D" in button.objectName():
+                self.effect = QGraphicsBlurEffect()
+                button.setGraphicsEffect(self.effect)
+
+                animation = QPropertyAnimation(self.effect, b"blurRadius")
+                animation.setDuration(1500)
+                animation.setStartValue(0)
+                animation.setEndValue(5)
+                group.addAnimation(animation)
+
+        group.start()
+
+    def fadeIn(self, widget, duration=700):
         self.effect = QGraphicsOpacityEffect()
         widget.setGraphicsEffect(self.effect)
 
         self.animation = QPropertyAnimation(self.effect, b"opacity")
         self.animation.easingCurve = QEasingCurve.OutCubic
-        self.animation.setDuration(700)
+        self.animation.setDuration(duration)
         self.animation.setStartValue(0)
         self.animation.setEndValue(1)
         self.animation.start()
 
-    def fadeOut(self, widget):
+    def fadeOut(self, widget, duration=1000):
         self.effect = QGraphicsOpacityEffect()
         widget.setGraphicsEffect(self.effect)
 
@@ -114,6 +164,12 @@ class GUI(QWidget):
 
         self.animation.finished.connect(lambda: widget.hide())
 
+    def disableButton(self, btn):
+        btn.setObjectName("D" + btn.objectName()[1:])
+
+    def disableAllButtons(self):
+        for button in self.findChildren(QPushButton):
+            button.setObjectName("D" + button.objectName()[1:])
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
