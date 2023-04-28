@@ -52,7 +52,6 @@ class GUI(QWidget):
 
     def startGame(self):
         self.playscreen.hide()
-        # self.fadeOutMovie(self.waitingbg)
         self.waitingbg.hide()
         self.waiting.stop()
 
@@ -78,6 +77,10 @@ class GUI(QWidget):
                 self.button.show()
 
     def setPlay(self, i, j):
+        for button in self.findChildren(QPushButton):
+            button.hide()
+            QTimer.singleShot(1000, button.show)
+
         self.showX(i, j) if self.turnX else self.showO(i, j)
         self.turnX = not self.turnX
 
@@ -236,18 +239,6 @@ class GUI(QWidget):
 
         self.animation.finished.connect(lambda: widget.hide())
 
-    def fadeOutMovie(self, widget):
-        self.effect = QGraphicsOpacityEffect()
-        widget.setGraphicsEffect(self.effect)
-
-        self.animation = QPropertyAnimation(widget, b"currentFrameNumber")
-        self.animation.easingCurve = QEasingCurve.OutCubic
-        self.animation.setDuration(2000)
-        self.animation.setStartValue(0)
-        self.animation.setEndValue(widget.frameCount() - 1)
-        self.animation.start()
-
-        self.animation.finished.connect(lambda: widget.hide())
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
