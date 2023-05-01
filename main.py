@@ -1,7 +1,31 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel, QGraphicsOpacityEffect, QGraphicsBlurEffect
 from PyQt5.QtGui import QPixmap, QIcon, QMovie
-from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve, QTimer, QParallelAnimationGroup
+from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve, QTimer, QParallelAnimationGroup, QThread, pyqtSignal
+import socket
+
+
+class SecondPlayerWorker(QThread):
+    found_second_player = pyqtSignal()
+
+    def __init__(self, client=None):
+        super().__init__()
+        self.client = client
+
+    def run(self):
+        print('Waiting for second player...')
+        self.keep_running = True
+        while self.keep_running:
+            res = self.client.recv(1024).decode()
+            print(res)
+            if res == 'Starting game...':
+                self.found_second_player.emit()
+                self.keep_running = False
+            elif res == 'Server is full':
+                print(res)
+                self.client.close()
+                sys.exit()
+
 
 class GUI(QWidget):
     def __init__(self):
@@ -38,8 +62,25 @@ class GUI(QWidget):
         self.waitingbg.show()
         self.waiting.start()
 
-        # fake waiting
-        QTimer.singleShot(0, self.startGame)
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        try:
+            self.client.connect(('localhost', 5000))
+            self.player = self.client.recv(1024).decode()
+            # print(self.player)
+            if self.player == 'Server is full':
+                sys.exit()
+        except Exception as e:
+            if e == KeyboardInterrupt:
+                print('Shutting down...')
+            else:
+                print('Server is offline')
+            sys.exit()
+
+        self.worker = SecondPlayerWorker(client=self.client)
+        self.worker.found_second_player.connect(self.startGame)
+        self.worker.found_second_player.connect(self.worker.deleteLater)
+        self.worker.start()
 
     def startGame(self):
         self.playscreen.hide()
@@ -55,7 +96,7 @@ class GUI(QWidget):
         self.fadeIn(self.background)
         self.background.show()
 
-        self.turnX = True # True = X, False = O
+        self.turnX = True if self.player == 'Player 1' else False
 
         self.xmap = QPixmap("assets/X.png")
         self.xmap = self.xmap.scaled(142, 142, Qt.KeepAspectRatioByExpanding)
