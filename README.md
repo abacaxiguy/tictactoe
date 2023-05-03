@@ -1,7 +1,7 @@
 <br>
 <div align="center">
   <p>
-    <img alt="Tic tac toe icon" src="./assets/icon.ico" height="150" />
+    <img alt="Tic tac toe icon" src="./assets/icons/icon.ico" height="150" />
   </p>
 
 # 🐍 A Python multiplayer tic-tac-toe using sockets 🕹
@@ -17,8 +17,8 @@
 <br>
 
 <p align="center">
-  <img src="./assets/playscreen.png" width="91%"/>
-  <img src="./assets/waiting.gif" width="45.3%"/>
+  <img src="./assets/pages/playscreen.png" width="91%"/>
+  <img src="./assets/pages/waiting.gif" width="45.3%"/>
   <img src="./screenshots/game.png" width="45.3%"/>
   <img src="./screenshots/xwins.png" width="45.3%"/>
   <img src="./screenshots/owins.png" width="45.3%"/>
