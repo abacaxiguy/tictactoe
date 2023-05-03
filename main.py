@@ -136,6 +136,14 @@ class GUI(QWidget):
         self.fadeIn(self.background)
         self.background.show()
 
+        self.gameOver = False
+
+        QTimer.singleShot(1000, self.showMoveType)
+
+        self.turnCard = QLabel(self)
+        self.turnCard.setAlignment(Qt.AlignCenter)
+        self.turnCard.setGeometry(220, 640, 284, 84)
+
         self.yourTurn = True if self.player == 'P1' else False
 
         self.xmap = QPixmap("assets/icons/X.png")
@@ -173,16 +181,22 @@ class GUI(QWidget):
             self.disableAllButtons()
 
     def setTurn(self):
+        self.showTurn()
+
         if not self.game_worker.yourTurn:
+            print("disable all buttons")
             self.disableAllButtons()
+            for button in self.findChildren(QPushButton):
+                print(button.objectName(), end=" ")
         else:
             self.enableNotPlayedButtons()
 
     def setPlay(self, i, j, moveType):
         self.currentBtn = self.findChild(QPushButton, "E" + str(i) + str(j))
-        if not self.currentBtn:
+        if not self.currentBtn or (not self.game_worker.yourTurn and moveType == self.moveType):
             return
 
+        print("Trying to set this button: " + self.currentBtn.objectName())
         if moveType == self.moveType:
             self.client.send(str(i).encode() + str(j).encode() + moveType.encode()) 
 
@@ -215,6 +229,7 @@ class GUI(QWidget):
             self.endGame("draw")
 
     def endGame(self, winner):
+        self.gameOver = True
         self.disableAllButtons()
 
         self.winner = QLabel(self)
@@ -225,19 +240,49 @@ class GUI(QWidget):
             if self.moveType == "X":
                 self.winner.setPixmap(QPixmap(f'assets/res/xwins{self.player}.png'))
             else:
-                self.winner.setPixmap(QPixmap(f'assets/res/xwins{"P1" if self.player == "P2" else self.player}.png'))
+                self.winner.setPixmap(QPixmap(f'assets/res/xwins{"P1" if self.player == "P2" else "P2"}.png'))
         elif winner == "O":
             if self.moveType == "O":
                 self.winner.setPixmap(QPixmap(f'assets/res/owins{self.player}.png'))
             else:
-                self.winner.setPixmap(QPixmap(f'assets/res/owins{"P1" if self.player == "P2" else self.player}.png'))
+                self.winner.setPixmap(QPixmap(f'assets/res/owins{"P1" if self.player == "P2" else "P2"}.png'))
         elif winner == "draw":
             self.winner.setPixmap(QPixmap("assets/res/draw.png"))
 
-        self.fadeIn(self.winner, 1500)
-        self.winner.show()
+        QTimer.singleShot(500, self.showWinner)
 
+    def showWinner(self):
+        self.fadeIn(self.winner, 1500)
+        QTimer.singleShot(500, self.winner.show)
+        QTimer.singleShot(1500, lambda: self.fadeOut(self.turnCard, 300))
         self.blurAllBackground()
+
+    def showMoveType(self):
+        self.disableAllButtons()
+        self.moveTypeCard = QLabel(self)
+        self.moveTypeCard.setGeometry(0, 0, 740, 740)
+        self.moveTypeCard.setAlignment(Qt.AlignCenter)
+        self.moveTypeCard.setPixmap(QPixmap(f"assets/components/{self.player}{self.moveType}.png"))
+
+        self.fadeIn(self.moveTypeCard)
+        self.moveTypeCard.show()
+
+        QTimer.singleShot(2000, self.hideMoveType)
+
+    def hideMoveType(self):
+        self.fadeOut(self.moveTypeCard)
+        QTimer.singleShot(1000, self.showTurn)
+        QTimer.singleShot(2500, self.enableNotPlayedButtons)
+
+    def showTurn(self):
+        self.moveTypeCard.hide()
+        QTimer.singleShot(500, lambda: self.fadeOut(self.turnCard, 500))
+        QTimer.singleShot(1000, self.fadeInTurn)
+
+    def fadeInTurn(self):
+        self.turnCard.setPixmap(QPixmap(f"assets/components/{'your' if self.game_worker.yourTurn else 'opponent'}turn.png"))
+        self.fadeIn(self.turnCard, 500)
+        self.turnCard.show()
 
     def blurAllBackground(self):
         group = QParallelAnimationGroup(self)
@@ -251,7 +296,6 @@ class GUI(QWidget):
         bganimation.setEndValue(5)
         group.addAnimation(bganimation)
 
-        
         for button in self.findChildren(QPushButton):
             if "D" in button.objectName():
                 self.effect = QGraphicsBlurEffect()
@@ -303,6 +347,7 @@ class GUI(QWidget):
                 if ij in self.game_worker.xMoves or ij in self.game_worker.oMoves:
                     continue
                 button.setObjectName("E" + button.objectName()[1:])
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
