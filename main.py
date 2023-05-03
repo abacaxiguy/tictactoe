@@ -109,7 +109,6 @@ class GUI(QWidget):
 
             self.player, self.moveType = response.split(';')
             print(f'You are player {self.player}')
-            print(f'Your move type is {self.moveType}')
         except Exception as e:
             if e == KeyboardInterrupt:
                 print('Shutting down...')
@@ -184,10 +183,7 @@ class GUI(QWidget):
         self.showTurn()
 
         if not self.game_worker.yourTurn:
-            print("disable all buttons")
             self.disableAllButtons()
-            for button in self.findChildren(QPushButton):
-                print(button.objectName(), end=" ")
         else:
             self.enableNotPlayedButtons()
 
@@ -196,7 +192,6 @@ class GUI(QWidget):
         if not self.currentBtn or (not self.game_worker.yourTurn and moveType == self.moveType):
             return
 
-        print("Trying to set this button: " + self.currentBtn.objectName())
         if moveType == self.moveType:
             self.client.send(str(i).encode() + str(j).encode() + moveType.encode()) 
 
@@ -249,7 +244,7 @@ class GUI(QWidget):
         elif winner == "draw":
             self.winner.setPixmap(QPixmap("assets/res/draw.png"))
 
-        QTimer.singleShot(500, self.showWinner)
+        QTimer.singleShot(700, self.showWinner)
 
     def showWinner(self):
         self.fadeIn(self.winner, 1500)
