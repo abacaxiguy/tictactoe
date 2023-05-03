@@ -31,12 +31,12 @@ class GameWorker(QThread):
     player_moved = pyqtSignal(int, int, str)
     turn = pyqtSignal(bool)
 
-    def __init__(self, client=None, player=None, yourTurn=None):
+    def __init__(self, client=None, moveType=None, yourTurn=None):
         super().__init__()
         self.client = client
         self.xMoves = []
         self.oMoves = []
-        self.player = player
+        self.moveType = moveType
         self.yourTurn = yourTurn
 
     def run(self):
@@ -67,10 +67,10 @@ class GUI(QWidget):
         super().__init__()
         self.setWindowTitle("Tic Tac Toe")
         self.setFixedSize(740, 740)
-        icon = QIcon('assets/icon.ico')
+        icon = QIcon('assets/icons/icon.ico')
         self.setWindowIcon(icon)
 
-        playbackground = QPixmap("assets/playscreen.png")
+        playbackground = QPixmap("assets/pages/playscreen.png")
         playbackground = playbackground.scaled(740, 740, Qt.KeepAspectRatioByExpanding)
 
         self.playscreen = QLabel(self)
@@ -86,7 +86,7 @@ class GUI(QWidget):
         self.fadeOut(self.playscreen)
         self.playbutton.setEnabled(False)
 
-        self.waiting = QMovie("assets/waiting.gif")
+        self.waiting = QMovie("assets/pages/waiting.gif")
 
         self.waitingbg = QLabel(self)
         self.waitingbg.setMovie(self.waiting)
@@ -102,9 +102,11 @@ class GUI(QWidget):
         try:
             self.client.connect(('localhost', 5000))
             self.player = self.client.recv(1024).decode()
-            print(self.player) # TODO: draw in screen which one you are
             if self.player == 'Server is full':
                 sys.exit()
+            print(f'You are player {self.player}')
+            self.moveType = self.client.recv(1024).decode()
+            print(f'Your move type is {self.moveType}')
         except Exception as e:
             if e == KeyboardInterrupt:
                 print('Shutting down...')
@@ -122,7 +124,7 @@ class GUI(QWidget):
         self.fadeOut(self.waitingbg)
         self.waiting.stop()
 
-        background = QPixmap("assets/tictactoe.png")
+        background = QPixmap("assets/pages/tictactoe.png")
 
         self.background = QLabel(self)
         self.background.setPixmap(background)
@@ -131,12 +133,12 @@ class GUI(QWidget):
         self.fadeIn(self.background)
         self.background.show()
 
-        self.yourTurn = True if self.player == "X" else False
+        self.yourTurn = True if self.player == 'P1' else False
 
-        self.xmap = QPixmap("assets/X.png")
+        self.xmap = QPixmap("assets/icons/X.png")
         self.xmap = self.xmap.scaled(142, 142, Qt.KeepAspectRatioByExpanding)
 
-        self.omap = QPixmap("assets/O.png")
+        self.omap = QPixmap("assets/icons/O.png")
         self.omap = self.omap.scaled(162, 162, Qt.KeepAspectRatioByExpanding)
 
         for i in range(3):
@@ -144,11 +146,11 @@ class GUI(QWidget):
                 self.button = QPushButton("", self)
                 self.button.setStyleSheet("background-color: rgba(0, 0, 0, 0); border: none; QPushButton::disabled { color: #6A00B3; }")
                 self.button.setGeometry((81 + i * 190), (82 + j * 190), 186, 186)
-                self.button.clicked.connect(lambda _, i=i, j=j: self.setPlay(i, j, self.player))
+                self.button.clicked.connect(lambda _, i=i, j=j: self.setPlay(i, j, self.moveType))
                 self.button.setObjectName("E" + str(i) + str(j))
                 self.button.show()
 
-        self.game_worker = GameWorker(client=self.client, player=self.player, yourTurn=self.yourTurn)
+        self.game_worker = GameWorker(client=self.client, moveType=self.moveType, yourTurn=self.yourTurn)
         self.game_worker.player_moved.connect(lambda i, j, move_type: self.setPlay(i, j, move_type))
         self.game_worker.turn.connect(self.setTurn)
         self.game_worker.start()
@@ -173,24 +175,25 @@ class GUI(QWidget):
         else:
             self.enableNotPlayedButtons()
 
-    def setPlay(self, i, j, player):
+    def setPlay(self, i, j, moveType):
         self.currentBtn = self.findChild(QPushButton, "E" + str(i) + str(j))
         if not self.currentBtn:
             return
 
-        if player == self.player:
-            self.client.send(str(i).encode() + str(j).encode() + player.encode()) 
+        if moveType == self.moveType:
+            self.client.send(str(i).encode() + str(j).encode() + moveType.encode()) 
 
         self.fadeIn(self.currentBtn)
 
         # save moves-----------------------
-        if player == "X":
+
+        if moveType == "X":
             self.game_worker.xMoves.append(str(i)+str(j))
         else:
             self.game_worker.oMoves.append(str(i)+str(j))
 
-        self.currentBtn.setIcon(QIcon(self.xmap if player == 'X' else self.omap))
-        self.currentBtn.setIconSize(self.xmap.rect().size() if player == 'X' else self.omap.rect().size())
+        self.currentBtn.setIcon(QIcon(self.xmap if moveType == 'X' else self.omap))
+        self.currentBtn.setIconSize(self.xmap.rect().size() if moveType == 'X' else self.omap.rect().size())
 
         self.disableButton(self.currentBtn)
 
@@ -216,11 +219,17 @@ class GUI(QWidget):
         self.winner.setGeometry(0, 0, 740, 740)
 
         if winner == "x":
-            self.winner.setPixmap(QPixmap("assets/xwins.png"))
+            if self.moveType == "X":
+                self.winner.setPixmap(QPixmap(f'assets/res/xwins{self.player[1]}.png'))
+            else:
+                self.winner.setPixmap(QPixmap(f'assets/res/xwins{1 if self.player[1] == "2" else 2}.png'))
         elif winner == "o":
-            self.winner.setPixmap(QPixmap("assets/owins.png"))
+            if self.moveType == "O":
+                self.winner.setPixmap(QPixmap(f'assets/res/owins{self.player[1]}.png'))
+            else:
+                self.winner.setPixmap(QPixmap(f'assets/res/owins{1 if self.player[1] == "2" else 2}.png'))
         elif winner == "draw":
-            self.winner.setPixmap(QPixmap("assets/draw.png"))
+            self.winner.setPixmap(QPixmap("assets/res/draw.png"))
 
         self.fadeIn(self.winner, 1500)
         self.winner.show()
@@ -270,7 +279,7 @@ class GUI(QWidget):
 
         self.animation = QPropertyAnimation(self.effect, b"opacity")
         self.animation.easingCurve = QEasingCurve.InCubic
-        self.animation.setDuration(1000)
+        self.animation.setDuration(duration)
         self.animation.setStartValue(1)
         self.animation.setEndValue(0)
         self.animation.start()
