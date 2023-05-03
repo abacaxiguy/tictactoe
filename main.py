@@ -116,10 +116,18 @@ class GUI(QWidget):
                 print('Server is offline')
             sys.exit()
 
-        self.worker = SecondPlayerWorker(client=self.client)
-        self.worker.found_second_player.connect(self.startGame)
-        self.worker.found_second_player.connect(self.worker.deleteLater)
-        self.worker.start()
+        if self.player == 'P1':
+            self.worker = SecondPlayerWorker(client=self.client)
+            self.worker.found_second_player.connect(self.startGame)
+            self.worker.found_second_player.connect(self.worker.deleteLater)
+            self.worker.start()
+        else:
+            res = self.client.recv(1024).decode()
+            print(res)
+            if res == 'Starting game...':
+                self.startGame()
+            else:
+                sys.exit()
 
     def startGame(self):
         self.playscreen.hide()
@@ -244,12 +252,12 @@ class GUI(QWidget):
         elif winner == "draw":
             self.winner.setPixmap(QPixmap("assets/res/draw.png"))
 
-        QTimer.singleShot(700, self.showWinner)
+        QTimer.singleShot(500, self.showWinner)
 
     def showWinner(self):
         self.fadeIn(self.winner, 1500)
-        QTimer.singleShot(500, self.winner.show)
-        QTimer.singleShot(1500, lambda: self.fadeOut(self.turnCard, 300))
+        self.winner.show()
+        QTimer.singleShot(1500, lambda: self.fadeOut(self.turnCard))
         self.blurAllBackground()
 
     def showMoveType(self):
