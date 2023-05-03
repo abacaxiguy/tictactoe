@@ -101,11 +101,14 @@ class GUI(QWidget):
 
         try:
             self.client.connect(('localhost', 5000))
-            self.player = self.client.recv(1024).decode()
-            if self.player == 'Server is full':
+            response = self.client.recv(1024).decode()
+
+            if response == 'Server is full':
+                print(response)
                 sys.exit()
+
+            self.player, self.moveType = response.split(';')
             print(f'You are player {self.player}')
-            self.moveType = self.client.recv(1024).decode()
             print(f'Your move type is {self.moveType}')
         except Exception as e:
             if e == KeyboardInterrupt:
@@ -202,10 +205,10 @@ class GUI(QWidget):
     def checkGameStatus(self):
         for move in self.winMoves: 
             if all(item in self.game_worker.oMoves for item in move):
-                    self.endGame("o")
+                    self.endGame("O")
                     return
             elif all(item in self.game_worker.xMoves for item in move):
-                    self.endGame("x")
+                    self.endGame("X")
                     return
 
         if len(self.game_worker.oMoves) + len(self.game_worker.xMoves) == 9:
@@ -218,16 +221,16 @@ class GUI(QWidget):
         self.winner.setAlignment(Qt.AlignCenter)
         self.winner.setGeometry(0, 0, 740, 740)
 
-        if winner == "x":
+        if winner == "X":
             if self.moveType == "X":
-                self.winner.setPixmap(QPixmap(f'assets/res/xwins{self.player[1]}.png'))
+                self.winner.setPixmap(QPixmap(f'assets/res/xwins{self.player}.png'))
             else:
-                self.winner.setPixmap(QPixmap(f'assets/res/xwins{1 if self.player[1] == "2" else 2}.png'))
-        elif winner == "o":
+                self.winner.setPixmap(QPixmap(f'assets/res/xwins{"P1" if self.player == "P2" else self.player}.png'))
+        elif winner == "O":
             if self.moveType == "O":
-                self.winner.setPixmap(QPixmap(f'assets/res/owins{self.player[1]}.png'))
+                self.winner.setPixmap(QPixmap(f'assets/res/owins{self.player}.png'))
             else:
-                self.winner.setPixmap(QPixmap(f'assets/res/owins{1 if self.player[1] == "2" else 2}.png'))
+                self.winner.setPixmap(QPixmap(f'assets/res/owins{"P1" if self.player == "P2" else self.player}.png'))
         elif winner == "draw":
             self.winner.setPixmap(QPixmap("assets/res/draw.png"))
 
