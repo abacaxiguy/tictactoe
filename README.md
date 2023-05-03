@@ -1,10 +1,10 @@
 <br>
 <div align="center">
   <p>
-    <img alt="Tic tac toe icon" src="./assets/icon.ico" height="100" />
+    <img alt="Tic tac toe icon" src="./assets/icon.ico" height="150" />
   </p>
 
-# 🕹 A multiplayer tic-tac-toe game using sockets with python 🐍
+# 🐍 A Python multiplayer tic-tac-toe using sockets 🕹
 
 </div>
 
@@ -26,7 +26,7 @@
 
 ---
 
-## 📋 Report
+## 📋 About
 
 As a final project for the discipline of Computer Networks, we were asked to develop a multiplayer application using sockets. We chose to develop a tic-tac-toe game, which is a simple game, but it was a great challenge to develop it using sockets.
 
