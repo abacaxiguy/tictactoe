@@ -96,7 +96,7 @@ class GUI(QWidget):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         try:
-            self.client.connect(('localhost', 5000))
+            self.client.connect(('localhost', 5000)) # <--- Change this to your server IP
             response = self.client.recv(1024).decode()
 
             if response == 'Server is full':

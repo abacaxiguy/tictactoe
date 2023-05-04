@@ -40,7 +40,7 @@ To run this project locally, you'll need to have [Python](https://www.python.org
 
 ```sh
   # Clone this repository
-  git clone
+  git clone https://github.com/abacaxiguy/tictactoe.git
 ```
 
 After cloning the repository, you'll need to install the dependencies. To do that, run the following commands:
