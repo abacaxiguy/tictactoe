@@ -22,7 +22,6 @@ class SecondPlayerWorker(QThread):
                 self.found_second_player.emit()
                 self.keep_running = False
             elif res == 'Server is full':
-                print(res)
                 self.client.close()
                 sys.exit()
 
@@ -49,16 +48,13 @@ class GameWorker(QThread):
                 self.client.close()
                 sys.exit()
 
+            self.yourTurn = not self.yourTurn
+            self.turn.emit(self.yourTurn)
+
             i = int(res[0])
             j = int(res[1])
             move_type = res[2]
-            if move_type == 'X':
-                self.xMoves.append((i, j))
-            elif move_type == 'O':
-                self.oMoves.append((i, j))
 
-            self.yourTurn = not self.yourTurn
-            self.turn.emit(self.yourTurn)
             self.player_moved.emit(i, j, move_type)
 
 
@@ -228,7 +224,7 @@ class GUI(QWidget):
                     self.endGame("X")
                     return
 
-        if len(self.game_worker.oMoves) + len(self.game_worker.xMoves) == 9:
+        if len(self.game_worker.oMoves) + len(self.game_worker.xMoves) >= 9:
             self.endGame("draw")
 
     def endGame(self, winner):
