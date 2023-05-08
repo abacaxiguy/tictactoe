@@ -27,7 +27,7 @@ class SecondPlayerWorker(QThread):
 
 
 class GameWorker(QThread):
-    player_moved = pyqtSignal(int, int, str)
+    player_moved = pyqtSignal(str, str, str)
     turn = pyqtSignal(bool)
 
     def __init__(self, client=None, moveType=None, yourTurn=None):
@@ -51,10 +51,7 @@ class GameWorker(QThread):
             self.yourTurn = not self.yourTurn
             self.turn.emit(self.yourTurn)
 
-            i = int(res[0])
-            j = int(res[1])
-            move_type = res[2]
-
+            i, j, move_type = res.split(';')
             self.player_moved.emit(i, j, move_type)
 
 
@@ -161,7 +158,7 @@ class GUI(QWidget):
                 self.button.setStyleSheet("background-color: rgba(0, 0, 0, 0); border: none; QPushButton::disabled { color: #6A00B3; }")
                 self.button.setGeometry((81 + i * 190), (82 + j * 190), 186, 186)
                 self.button.clicked.connect(lambda _, i=i, j=j: self.setPlay(i, j, self.moveType))
-                self.button.setObjectName("E" + str(i) + str(j))
+                self.button.setObjectName(f'E{i}{j}')
                 self.button.show()
 
         self.game_worker = GameWorker(client=self.client, moveType=self.moveType, yourTurn=self.yourTurn)
@@ -170,14 +167,14 @@ class GUI(QWidget):
         self.game_worker.start()
 
         self.winMoves =[
-            ["00","11","22"], # diagonal 1
-            ["20","11","02"], # diagonal 2
+            ["00", "11", "22"], # diagonal 1
+            ["20", "11", "02"], # diagonal 2
             ["00", "01", "02"], # horizontal 0
             ["10", "11", "12"], # horizontal 1 
             ["20", "21", "22"], # horizontal 2    
             ["00", "10", "20"], # vertical 0
             ["01", "11", "21"], # vertical 1
-            ["02", "12", "22"] # vertical 2
+            ["02", "12", "22"]  # vertical 2
         ]
 
         if not self.game_worker.yourTurn:
@@ -192,21 +189,21 @@ class GUI(QWidget):
             self.enableNotPlayedButtons()
 
     def setPlay(self, i, j, moveType):
-        self.currentBtn = self.findChild(QPushButton, "E" + str(i) + str(j))
+        self.currentBtn = self.findChild(QPushButton, f'E{i}{j}')
         if not self.currentBtn or (not self.game_worker.yourTurn and moveType == self.moveType):
             return
 
         if moveType == self.moveType:
-            self.client.send(str(i).encode() + str(j).encode() + moveType.encode()) 
+            self.client.send(f'{i};{j};{moveType}'.encode()) 
 
         self.fadeIn(self.currentBtn)
 
         # save moves-----------------------
 
         if moveType == "X":
-            self.game_worker.xMoves.append(str(i)+str(j))
+            self.game_worker.xMoves.append(f'{i}{j}')
         else:
-            self.game_worker.oMoves.append(str(i)+str(j))
+            self.game_worker.oMoves.append(f'{i}{j}')
 
         self.currentBtn.setIcon(QIcon(self.xmap if moveType == 'X' else self.omap))
         self.currentBtn.setIconSize(self.xmap.rect().size() if moveType == 'X' else self.omap.rect().size())
