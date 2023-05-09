@@ -1,7 +1,7 @@
 <br>
 <div align="center">
   <p>
-    <img alt="Tic tac toe icon" src="./assets/icons/icon.ico" height="150" />
+    <img alt="Tic tac toe icon" src="https://github.com/abacaxiguy/tictactoe/blob/main/assets/icons/icon.ico" height="150" />
   </p>
 
 # 🐍 A Python multiplayer tic-tac-toe using sockets 🕹
@@ -17,11 +17,11 @@
 <br>
 
 <p align="center">
-  <img src="./assets/pages/playscreen.png" width="91%"/>
-  <img src="./assets/pages/waiting.gif" width="45.3%"/>
-  <img src="./screenshots/game.png" width="45.3%"/>
-  <img src="./screenshots/xwins.png" width="45.3%"/>
-  <img src="./screenshots/owins.png" width="45.3%"/>
+  <img src="https://github.com/abacaxiguy/tictactoe/blob/main/assets/pages/playscreen.png" width="91%"/>
+  <img src="https://github.com/abacaxiguy/tictactoe/blob/main/assets/pages/waiting.gif" width="45.3%"/>
+  <img src="https://github.com/abacaxiguy/tictactoe/blob/main/screenshots/game.png" width="45.3%"/>
+  <img src="https://github.com/abacaxiguy/tictactoe/blob/main/screenshots/xwins.png" width="45.3%"/>
+  <img src="https://github.com/abacaxiguy/tictactoe/blob/main/screenshots/owins.png" width="45.3%"/>
 </p>
 
 ---
@@ -30,7 +30,7 @@
 
 As a final project for the discipline of Computer Networks, we were asked to develop a multiplayer application using sockets. We chose to develop a tic-tac-toe game, which is a simple game, but it was a great challenge to develop it using sockets.
 
-Here is the report as requested by the teacher (in portuguese): [Relatório](./relatorio.pdf)
+Here is the report as requested by the teacher (in portuguese): [Relatório](https://github.com/abacaxiguy/tictactoe/blob/main/relatorio.pdf)
 
 ---
 
